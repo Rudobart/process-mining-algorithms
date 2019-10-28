@@ -1,0 +1,8 @@
+six
+pandas
+networkx==1.9
+matplotlib
+pydotplus
+pydot
+bpmn-python
+opyenxes
