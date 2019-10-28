@@ -49,5 +49,6 @@ bpmn_graph.export_xml_file_no_di(output_directory, output_file_no_di)
 # visualizer.visualize_diagram(bpmn_graph)
 visualizer.bpmn_diagram_to_dot_file(bpmn_graph, output_directory + output_dot_file)
 visualizer.bpmn_diagram_to_png(bpmn_graph, output_directory + output_png_file)
+bpmn_graph.export_xml_file(output_directory, "simple_diagram.bpmn")
 
 

@@ -1,6 +1,9 @@
 import itertools
 import copy
 from opyenxes.classification.XEventAttributeClassifier import XEventAttributeClassifier
+import bpmn_python.bpmn_diagram_layouter as layouter
+import bpmn_python.bpmn_diagram_visualizer as visualizer
+import bpmn_python.bpmn_diagram_rep as diagram
 
 
 def gen():
@@ -85,7 +88,7 @@ class AlphaAlgorithm:
         self.starting_events = set()
         self.ending_events = set()
         self.all_event = set()
-
+        self.bpmn_graph = diagram.BpmnDiagramGraph()
         self._extract_events()
 
         # Generate footprint
@@ -156,6 +159,7 @@ class AlphaAlgorithm:
         for place in self.places:
             places.append(Place(*place))
 
+
         for place in places:
             name = "place_{}".format(next(self.gen))
             place.name = name
@@ -173,6 +177,7 @@ class AlphaAlgorithm:
                     start.append(place.name)
                 elif place.start and event in place.start:
                     end.append(place.name)
+            print(start)
 
             a1 = map(lambda ev: '"{}"'.format(ev), start)
             a2 = map(lambda ev: '"{}"'.format(ev), end)
@@ -210,7 +215,6 @@ if __name__ == '__main__':
 
     # Convert log object in array with only the Activity attribute of the event
     log_list = list(map(lambda trace: list(map(classifier.get_class_identity, trace)), log))
-
     # Generate the Alpha Algorithm with the array
     alpha = AlphaAlgorithm(log_list)
     print(alpha)
