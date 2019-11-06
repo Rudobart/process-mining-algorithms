@@ -22,8 +22,22 @@ class Alpha:
             [start_event_id, _] = self.bpmn_graph.add_task_to_diagram(self.process_id, task_name=start_event)
             self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, start_id, start_event_id)
             self.nodes_id[start_event] = start_event_id
-            self.add_node(start_event, start_event_id, [])
+        #    self.add_node(start_event, start_event_id, [])
 
+
+        parallels = self.footprint.max_parallels()
+        for parallel in parallels:
+            [parallel_start, _] = self.bpmn_graph.add_parallel_gateway_to_diagram(self.process_id, gateway_name="parallel_start")
+            [parallel_end, _] = self.bpmn_graph.add_parallel_gateway_to_diagram(self.process_id, gateway_name="parallel end")
+            for event in parallel:
+                if event in self.nodes_id.keys():
+                    task_id = self.nodes_id[event]
+                else:
+                    [task_id, _] = self.bpmn_graph.add_task_to_diagram(self.process_id, task_name=event)
+                    self.nodes_id[event] = task_id
+
+                self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, task_id, parallel_start)
+                self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, parallel_end, task_id)
 
 
         for end_event in self.footprint.end_events:
@@ -34,8 +48,7 @@ class Alpha:
 
 
 
-        #print(self.bpmn_graph.get_nodes())
-        #print(len(self.bpmn_graph.get_flows()))
+
         layouter.generate_layout(self.bpmn_graph)
         # Uncomment line below to get a simple view of created diagram
         #visualizer.visualize_diagram(bpmn_graph)
@@ -75,6 +88,8 @@ class Alpha:
                      self.add_node(event, task_id, used)
 
 
+
+
 alpha = Alpha(log_list)
-print(alpha.sucession)
+
 alpha.build_bpmn()
