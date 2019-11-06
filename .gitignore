@@ -3,3 +3,6 @@
 /venv
 /output
 /.idea
+/__pycache__
+/agorithms/__pycache__
+

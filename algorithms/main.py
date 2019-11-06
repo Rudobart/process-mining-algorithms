@@ -3,15 +3,12 @@ import unittest
 import bpmn_python.bpmn_diagram_layouter as layouter
 import bpmn_python.bpmn_diagram_visualizer as visualizer
 import bpmn_python.bpmn_diagram_rep as diagram
+from config import *
+from algorithms.Alpha import *
 
 
 
 
-output_directory = "./output/test-manual/simple/"
-output_file_with_di = "manually-generated-output.xml"
-output_file_no_di = "manually-generated-output-no-di.xml"
-output_dot_file = "manually-generated-example"
-output_png_file = "manually-generated-example"
 
 
 bpmn_graph = diagram.BpmnDiagramGraph()
@@ -41,14 +38,43 @@ bpmn_graph.add_sequence_flow_to_diagram(process_id, task2_ex_id, exclusive_gate_
 bpmn_graph.add_sequence_flow_to_diagram(process_id, exclusive_gate_join_id, task2_id, "ex_join_to_two")
 bpmn_graph.add_sequence_flow_to_diagram(process_id, task2_id, end_id, "two_to_end")
 
-layouter.generate_layout(bpmn_graph)
+[task3_id, _] = bpmn_graph.add_task_to_diagram(process_id, task_name="task3")
+[task4_id, _] = bpmn_graph.add_task_to_diagram(process_id, task_name="task4")
+[task5_id, _] = bpmn_graph.add_task_to_diagram(process_id, task_name="task5")
+[task6_id, _] = bpmn_graph.add_task_to_diagram(process_id, task_name="task6")
+[task7_id, _] = bpmn_graph.add_task_to_diagram(process_id, task_name="task7")
+[task8_id, _] = bpmn_graph.add_task_to_diagram(process_id, task_name="task8")
+[task9_id, _] = bpmn_graph.add_task_to_diagram(process_id, task_name="task8")
 
-bpmn_graph.export_xml_file(output_directory, output_file_with_di)
-bpmn_graph.export_xml_file_no_di(output_directory, output_file_no_di)
+
+
+bpmn_graph.add_sequence_flow_to_diagram(process_id, task9_id, task3_id)
+bpmn_graph.add_sequence_flow_to_diagram(process_id, task9_id, task4_id)
+bpmn_graph.add_sequence_flow_to_diagram(process_id, task9_id, task5_id)
+bpmn_graph.add_sequence_flow_to_diagram(process_id, task6_id, task9_id)
+bpmn_graph.add_sequence_flow_to_diagram(process_id, task7_id, task9_id)
+bpmn_graph.add_sequence_flow_to_diagram(process_id, task8_id, task9_id)
+print(bpmn_graph.get_nodes())
+
+
+#bpmn_graph.add_sequence_flow_to_diagram(process_id, task4_id, task3_id)
+
+
+
+
+
+
+
+
+
+
+layouter.generate_layout(bpmn_graph)
+print(bpmn_graph.get_nodes())
+alpha = Alpha(log_list)
+alpha.build_bpmn()
+
 # Uncomment line below to get a simple view of created diagram
-# visualizer.visualize_diagram(bpmn_graph)
-visualizer.bpmn_diagram_to_dot_file(bpmn_graph, output_directory + output_dot_file)
-visualizer.bpmn_diagram_to_png(bpmn_graph, output_directory + output_png_file)
+#visualizer.visualize_diagram(bpmn_graph)
 bpmn_graph.export_xml_file(output_directory, "simple_diagram.bpmn")
 
 

@@ -1,7 +1,10 @@
 from opyenxes.classification.XEventAttributeClassifier import XEventAttributeClassifier
 from opyenxes.data_in.XUniversalParser import XUniversalParser
 
-file_path = "/home/bartlomiej/process-mining/process-mining-algorithms/running-example.xes"
+file_path = "/home/bartlomiej/process-mining/process-mining-algorithms/logs/running-example-just-two-cases.xes"
+output_directory = "./output/"
+
+
 
 with open(file_path) as log_file:
     # Parse the log
