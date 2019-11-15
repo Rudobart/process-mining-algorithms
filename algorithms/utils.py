@@ -1,4 +1,3 @@
-
 class Footprint:
     def __init__(self, log):
         self.log = log
@@ -6,6 +5,8 @@ class Footprint:
         self.direct_sucession = self.find_direct_sucession()
         self.start_events = self.find_start_events()
         self.end_events = self.find_end_events()
+        self.succession = self.merge_sucessions()
+        self.node_incomes = self.count_node_incomes(self.succession, self.max_parallels())
 
     def find_unique_events(self):
         unique = []
@@ -90,20 +91,19 @@ class Footprint:
                     merged[wanted].append(it[1])
             used.append(wanted)
             i += 1
+
         merged = self.remove_parallels(merged, self.max_parallels())
         return merged
 
     def remove_parallels(self, dict, parallels):
         for key in dict:
             for parallel in parallels:
-                values = dict[key]
-                if len(values) > 1:
-                    for value in values:
+                if len(dict[key]) > 1:
+                    for value in dict[key]:
                         if key in parallel and value in parallel:
-                            print(value)
-                            values.remove(value)
+                            dict[key].remove(value)
                 else:
-                    if key in parallel and values in parallel:
+                    if key in parallel and dict[key] in parallel:
                         dict.remove(key)
         return dict
 
@@ -120,4 +120,25 @@ class Footprint:
             if trace[len(trace)-1] not in end_events:
                 end_events.append(trace[len(trace)-1])
         return end_events
+
+    def count_node_incomes(self, sucession, parallels):
+        incomes = {}
+        for key in sucession:
+            for value in sucession[key]:
+                if value not in incomes.keys():
+                    incomes[value] = 1
+                else:
+                    incomes[value] += 1
+
+        for parallel in parallels:
+            for event in parallel:
+                if incomes[event] > 1:
+                    for internal_event in parallel:
+                        if event != internal_event:
+                            incomes[internal_event] = 1
+                continue
+            continue
+
+        return incomes
+
 

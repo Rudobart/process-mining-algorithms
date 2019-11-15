@@ -1,7 +1,7 @@
 from opyenxes.classification.XEventAttributeClassifier import XEventAttributeClassifier
 from opyenxes.data_in.XUniversalParser import XUniversalParser
 
-file_path = "/home/bartlomiej/process-mining/process-mining-algorithms/logs/bigger-example.xes"
+file_path = "/home/bartlomiej/process-mining/process-mining-algorithms/logs/Lfull.xes"
 output_directory = "./output/"
 
 
