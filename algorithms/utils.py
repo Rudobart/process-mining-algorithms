@@ -133,6 +133,8 @@ class Footprint:
                 else:
                     incomes[value] += 1
 
+
+
         for parallel in parallels:
             for event in parallel:
                 if incomes[event] > 1:
@@ -153,8 +155,6 @@ class Footprint:
                     if value in parallel:
                         outcomes[key] -= (len(parallel) - 1)
                     break
-
-
 
         return outcomes
 
