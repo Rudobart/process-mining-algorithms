@@ -6,7 +6,10 @@ class Footprint:
         self.start_events = self.find_start_events()
         self.end_events = self.find_end_events()
         self.succession = self.merge_sucessions()
-        self.node_incomes = self.count_node_incomes(self.succession, self.max_parallels())
+        self.parallels = self.max_parallels()
+        self.succession["d"].remove("b")
+        self.node_incomes = self.count_node_incomes(self.succession, self.parallels)
+        self.node_outcomes = self.count_node_outcomes(self.succession,self.parallels)
 
     def find_unique_events(self):
         unique = []
@@ -121,10 +124,10 @@ class Footprint:
                 end_events.append(trace[len(trace)-1])
         return end_events
 
-    def count_node_incomes(self, sucession, parallels):
+    def count_node_incomes(self, succession, parallels):
         incomes = {}
-        for key in sucession:
-            for value in sucession[key]:
+        for key in succession:
+            for value in succession[key]:
                 if value not in incomes.keys():
                     incomes[value] = 1
                 else:
@@ -140,5 +143,19 @@ class Footprint:
             continue
 
         return incomes
+
+    def count_node_outcomes(self, succession, parallels):
+        outcomes = {}
+        for key in succession:
+            outcomes[key] = len(succession[key])
+            for parallel in parallels:
+                for value in succession[key]:
+                    if value in parallel:
+                        outcomes[key] -= (len(parallel) - 1)
+                    break
+
+
+
+        return outcomes
 
 

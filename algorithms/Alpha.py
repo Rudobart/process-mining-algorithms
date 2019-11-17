@@ -15,21 +15,22 @@ class Alpha:
         self.node_ancestors = {}
         self.node_successors = {}
         self.event_incomes = self.footprint.node_incomes
-        self.event_outcomes = {}
+        self.event_outcomes = self.footprint.node_outcomes
 
 
 
 
     def build_bpmn(self):
-        self.succession["d"].remove("b")
         self.add_nodes()
         self.add_start_events()
         self.add_parallels()
         self.add_gates()
         self.add_flows()
         print(self.node_ancestors)
+        print(self.node_successors)
         print(self.succession)
         print(self.event_incomes)
+        print(self.event_outcomes)
 
 
 
@@ -37,7 +38,7 @@ class Alpha:
 
         layouter.generate_layout(self.bpmn_graph)
         # Uncomment line below to get a simple view of created diagram
-        #visualizer.visualize_diagram(bpmn_graph)
+        #visualizer.visualize_diagram(self.bpmn_graph)
         self.bpmn_graph.export_xml_file(output_directory, "alpha_algorithm.bpmn")
 
 
@@ -57,10 +58,10 @@ class Alpha:
             self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, start_id, start_event_id)
 
     def add_parallels(self):
-        parallels = self.footprint.max_parallels()
+        parallels = self.footprint.parallels
         for parallel in parallels:
-            [parallel_start, _] = self.bpmn_graph.add_parallel_gateway_to_diagram(self.process_id, gateway_name="parallel_start")
-            [parallel_end, _] = self.bpmn_graph.add_parallel_gateway_to_diagram(self.process_id, gateway_name="parallel end")
+            [parallel_start, _] = self.bpmn_graph.add_parallel_gateway_to_diagram(self.process_id)
+            [parallel_end, _] = self.bpmn_graph.add_parallel_gateway_to_diagram(self.process_id)
             for event in parallel:
                 self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, parallel_start, event)
                 self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, event, parallel_end)
@@ -73,16 +74,60 @@ class Alpha:
                 [exclusive_gate_id, _] = self.bpmn_graph.add_exclusive_gateway_to_diagram(self.process_id)
                 self.node_ancestors.setdefault(event, []).append(exclusive_gate_id)
 
+        for event in self.event_outcomes:
+            if self.event_outcomes[event] > 1:
+                [exclusive_gate_id, _] = self.bpmn_graph.add_exclusive_gateway_to_diagram(self.process_id)
+                self.node_successors.setdefault(event, []).append(exclusive_gate_id)
+
+
+
+
     def add_flows(self):
-        for event in self.succession.keys():
+        parallels = self.footprint.parallels
+        used_parallels = []
+        for event in self.succession:
             if event in self.node_ancestors:
                 if len(self.node_ancestors[event]) > 1:
                     for index, id in enumerate(self.node_ancestors[event]):
                         if index + 1 != len(self.node_ancestors[event]):
                            self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, self.node_ancestors[event][index+1], id)
-                if self.is_in_parallel(event, self.footprint.max_parallels()) is False:
+                if self.is_in_parallel(event, parallels) is False:
                     self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, self.node_ancestors[event][0], event)
-            else:
+
+
+            if event in self.node_successors:
+                if len(self.node_successors[event]) > 1:
+                    for index, id in enumerate(self.node_successors[event]):
+                        if index + 1 != len(self.node_successors[event]):
+                           self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, id, self.node_successors[event][index+1])
+                if self.is_in_parallel(event, parallels) is False:
+                    self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, event, self.node_successors[event][0])
+
+
+
+
+            for value in self.succession[event]:
+                if event in self.node_successors and value in self.node_ancestors:
+                    self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, self.node_successors[event][-1], self.node_ancestors[value][-1])
+
+
+
+
+                # elif event in self.node_successors and value not in self.node_ancestors:
+                #      self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, self.node_successors[event][-1], value)
+                #      if self.is_in_parallel(event, parallels) or self.is_in_parallel(value, parallels):
+                #          is_parallel = True
+
+                # elif event not in self.node_successors and value in self.node_ancestors:
+                #      self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, event, self.node_ancestors[value][-1])
+                #
+                # elif event not in self.node_successors and value not in self.node_ancestors:
+                #      self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, event, value)
+
+
+
+
+
 
 
 
@@ -94,6 +139,12 @@ class Alpha:
             if event in parallel:
                 return True
         return False
+
+    def current_parallel(self, event, value, parallels):
+        for parallel in parallels:
+            if event in parallel or value in parallel:
+                return parallel
+        return []
 
 
 
