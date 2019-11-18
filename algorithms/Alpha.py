@@ -27,12 +27,14 @@ class Alpha:
         self.add_parallels()
         self.add_gates()
         self.add_flows()
+        self.add_end_events()
         print(self.node_ancestors)
         print(self.node_successors)
         print(self.succession)
         print(self.event_incomes)
         print(self.event_outcomes)
         print(self.flows)
+        print(self.log)
 
 
 
@@ -59,6 +61,16 @@ class Alpha:
             start_event_id = start_event
             self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, start_id, start_event_id)
             self.flows.append((start_id,start_event_id))
+
+    def add_end_events(self):
+        for end_event in self.footprint.end_events:
+            [end_id, _] = self.bpmn_graph.add_end_event_to_diagram(self.process_id, end_event_definition="message")
+            self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, end_event, end_id)
+            self.flows.append((end_event, end_id))
+
+
+
+
 
     def add_parallels(self):
         parallels = self.footprint.parallels
@@ -89,14 +101,15 @@ class Alpha:
 
     def add_flows(self):
         parallels = self.footprint.parallels
-        for event in self.succession:
+        for event in self.footprint.unique_events:
+            used_parallels = []
             if event in self.node_ancestors:
                 if len(self.node_ancestors[event]) > 1:
                     for index, id in enumerate(self.node_ancestors[event]):
                         if index + 1 != len(self.node_ancestors[event]):
                            self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, self.node_ancestors[event][index+1], id)
                            self.flows.append((self.node_ancestors[event][index+1], id))
-                if self.is_in_parallel(event, parallels) is False:
+                if not self.is_in_parallel(event, parallels):
                     self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, self.node_ancestors[event][0], event)
                     self.flows.append((self.node_ancestors[event][0], event))
 
@@ -107,30 +120,72 @@ class Alpha:
                            self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, id, self.node_successors[event][index+1])
                            self.flows.append((id, self.node_successors[event][index+1]))
 
-                if self.is_in_parallel(event, parallels) is False:
+                if not self.is_in_parallel(event, parallels):
                     self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, event, self.node_successors[event][0])
                     self.flows.append((event, self.node_successors[event][0]))
 
-            for value in self.succession[event]:
-                print(event, value, self.is_connected(event, value))
-                if not self.is_connected(event, value):
-                     if self.is_in_parallel(event, parallels) and self.event_incomes[event] == 1:
-                             continue
-                     if event in self.node_successors and value in self.node_ancestors:
-                         self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, self.node_successors[event][-1], self.node_ancestors[value][-1])
-                         self.flows.append((self.node_successors[event][-1], self.node_ancestors[value][-1]))
 
-                     elif event in self.node_successors and value not in self.node_ancestors:
-                         self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, self.node_successors[event][-1], value)
-                         self.flows.append((self.node_successors[event][-1], value))
+            if event in self.succession:
+                for value in self.succession[event]:
+                    print(event, value ,self.is_connected(event,value))
+                    if not self.is_connected(event, value):
+                         if event in self.node_successors and value in self.node_ancestors and not self.is_in_parallel(event,used_parallels) and not self.is_in_parallel(value,used_parallels):
+                             used_parallels = self.add_flow_sucessor_to_ancestor(event, value)
 
-                     elif event not in self.node_successors and value in self.node_ancestors:
-                         self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, event, self.node_ancestors[value][-1])
-                         self.flows.append((event, self.node_ancestors[value][-1]))
 
-                     elif event not in self.node_successors and value not in self.node_ancestors:
-                         self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, event, value)
-                         self.flows.append((event, value))
+                         elif event in self.node_successors and value not in self.node_ancestors:
+                             self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, self.node_successors[event][-1], value)
+                             self.flows.append((self.node_successors[event][-1], value))
+
+
+
+                         elif event not in self.node_successors and value in self.node_ancestors and not self.is_in_parallel(value, used_parallels):
+                             used_parallels = self.add_flow_node_to_ancestor(event,value)
+
+
+                         elif event not in self.node_successors and value not in self.node_ancestors:
+                             self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, event, value)
+                             self.flows.append((event, value))
+
+
+    def add_flow_sucessor_to_ancestor(self, event, value):
+        parallels = self.footprint.parallels
+        target = self.node_ancestors[value][-1]
+        source = self.node_successors[event][-1]
+        used_parallels = []
+        for parallel in parallels:
+            if event in parallel:
+                for event2 in parallel:
+                    if len(self.node_successors[event2]) > len(self.node_successors[event]):
+                        source = self.node_successors[event2][-1]
+                used_parallels.append(parallel)
+            if value in parallel:
+                for event2 in parallel:
+                    if len(self.node_ancestors[event2]) > len(self.node_ancestors[value]):
+                        target = self.node_ancestors[event2][-1]
+                used_parallels.append(parallel)
+
+        self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, source, target)
+        self.flows.append((source, target))
+        return used_parallels
+
+
+
+    def add_flow_node_to_ancestor(self, event, value):
+        parallels = self.footprint.parallels
+        target = self.node_ancestors[value][-1]
+        used_parallels = []
+        for parallel in parallels:
+            if value in parallel:
+                for event2 in parallel:
+                    if len(self.node_ancestors[event2]) > len(self.node_ancestors[value]):
+                        target = self.node_ancestors[event2][-1]
+                used_parallels.append(parallel)
+
+        self.bpmn_graph.add_sequence_flow_to_diagram(self.process_id, event, target)
+        self.flows.append((event, target))
+        return used_parallels
+
 
     def is_connected(self, source, target):
         availables= []
@@ -144,6 +199,17 @@ class Alpha:
         if target in availables:
             return True
         return False
+
+    def check_parallels_ancestor(self, event):
+        parallels = self.footprint.parallels
+        for parallel in parallels:
+            if event in parallel:
+                for event2 in parallel:
+                    if len(self.node_ancestors[event]) < len(self.node_ancestors[event2]):
+                        return False
+
+
+        return True
 
 
 

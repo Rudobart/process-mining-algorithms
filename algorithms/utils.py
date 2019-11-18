@@ -7,7 +7,7 @@ class Footprint:
         self.end_events = self.find_end_events()
         self.succession = self.merge_sucessions()
         self.parallels = self.max_parallels()
-        self.succession["d"].remove("b")
+#        self.succession["d"].remove("b")
         self.node_incomes = self.count_node_incomes(self.succession, self.parallels)
         self.node_outcomes = self.count_node_outcomes(self.succession,self.parallels)
 
@@ -94,7 +94,6 @@ class Footprint:
                     merged[wanted].append(it[1])
             used.append(wanted)
             i += 1
-
         merged = self.remove_parallels(merged, self.max_parallels())
         return merged
 
@@ -132,9 +131,6 @@ class Footprint:
                     incomes[value] = 1
                 else:
                     incomes[value] += 1
-
-
-
         for parallel in parallels:
             for event in parallel:
                 if incomes[event] > 1:
@@ -143,8 +139,17 @@ class Footprint:
                             incomes[internal_event] = 1
                 continue
             continue
-
+        self.handle_parallel_incomes(incomes,succession,parallels)
         return incomes
+
+    def handle_parallel_incomes(self, incomes, succession, parallels):
+        for key in succession:
+            for value in succession[key]:
+                for parallel in parallels:
+                    if key in parallel and key in incomes:
+                        incomes[value] -= (len(parallel) - 1)
+                        return
+
 
     def count_node_outcomes(self, succession, parallels):
         outcomes = {}
