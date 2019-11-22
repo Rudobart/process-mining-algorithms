@@ -25,9 +25,9 @@ class Alpha:
         self.add_nodes()
         self.add_start_events()
         self.add_parallels()
-        self.add_gates()
-        self.add_flows()
-        self.add_end_events()
+        # self.add_gates()
+        # self.add_flows()
+        # self.add_end_events()
         print(self.node_ancestors)
         print(self.node_successors)
         print(self.succession)
@@ -75,6 +75,7 @@ class Alpha:
     def add_parallels(self):
         parallels = self.footprint.parallels
         for parallel in parallels:
+            print(parallel)
             [parallel_start, _] = self.bpmn_graph.add_parallel_gateway_to_diagram(self.process_id)
             [parallel_end, _] = self.bpmn_graph.add_parallel_gateway_to_diagram(self.process_id)
             for event in parallel:
@@ -127,7 +128,6 @@ class Alpha:
 
             if event in self.succession:
                 for value in self.succession[event]:
-                    print(event, value ,self.is_connected(event,value))
                     if not self.is_connected(event, value):
                          if event in self.node_successors and value in self.node_ancestors and not self.is_in_parallel(event,used_parallels) and not self.is_in_parallel(value,used_parallels):
                              used_parallels = self.add_flow_sucessor_to_ancestor(event, value)
