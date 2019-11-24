@@ -6,8 +6,7 @@ class Footprint:
         self.start_events = self.find_start_events()
         self.end_events = self.find_end_events()
         self.succession = self.merge_sucessions()
-        self.parallels = self.max_parallels()
-#        self.succession["d"].remove("b")
+        self.parallels = self.find_parallels()
         self.node_incomes = self.count_node_incomes(self.succession, self.parallels)
         self.node_outcomes = self.count_node_outcomes(self.succession,self.parallels)
 
@@ -35,9 +34,8 @@ class Footprint:
         pararrels = []
         for event in self.unique_events:
             for event2 in self.unique_events:
-                if (event,event2) in self.direct_sucession and (event2, event) in self.direct_sucession and (event,event2) not in pararrels and (event2,event) not in pararrels:
+                if (event, event2) in self.direct_sucession and (event2, event) in self.direct_sucession and [event, event2] not in pararrels and [event2, event] not in pararrels:
                     pararrels.append([event, event2])
-
         return pararrels
 
     def max_parallels(self):
@@ -60,7 +58,7 @@ class Footprint:
             for y in list2:
                 if x == y:
                     result = True
-                    return result
+                    return (result, x)
         return result
 
     def unique_list(self, list1):
@@ -94,20 +92,17 @@ class Footprint:
                     merged[wanted].append(it[1])
             used.append(wanted)
             i += 1
-        merged = self.remove_parallels(merged, self.max_parallels())
+        self.remove_parallels(self.find_parallels(), merged)
         return merged
 
-    def remove_parallels(self, dict, parallels):
-        for key in dict:
-            for parallel in parallels:
-                if len(dict[key]) > 1:
-                    for value in dict[key]:
-                        if key in parallel and value in parallel:
-                            dict[key].remove(value)
-                else:
-                    if key in parallel and dict[key] in parallel:
-                        dict.remove(key)
-        return dict
+    def remove_parallels(self, parallels, dict):
+        for parallel in parallels:
+            for event in parallel:
+                for event2 in parallel:
+                    if event != event2:
+                        dict[event].remove(event2)
+
+
 
     def find_start_events(self):
         start_events = []
@@ -131,24 +126,15 @@ class Footprint:
                     incomes[value] = 1
                 else:
                     incomes[value] += 1
-        for parallel in parallels:
-            for event in parallel:
-                if incomes[event] > 1:
-                    for internal_event in parallel:
-                        if event != internal_event:
-                            incomes[internal_event] = 1
-                continue
-            continue
-        self.handle_parallel_incomes(incomes,succession,parallels)
+                for parallel in parallels:
+                    if key in parallel and value in incomes:
+                        incomes[value] -= (len(parallel)-1)
+
+
         return incomes
 
-    def handle_parallel_incomes(self, incomes, succession, parallels):
-        for key in succession:
-            for value in succession[key]:
-                for parallel in parallels:
-                    if key in parallel and key in incomes:
-                        incomes[value] -= (len(parallel) - 1)
-                        return
+
+
 
 
     def count_node_outcomes(self, succession, parallels):
