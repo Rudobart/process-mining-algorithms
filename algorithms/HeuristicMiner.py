@@ -4,7 +4,7 @@ import bpmn_python.bpmn_diagram_visualizer as visualizer
 import bpmn_python.bpmn_diagram_rep as diagram
 from algorithms.utils import Footprint as footprint
 
-class Alpha:
+class HeuristicMiner:
     def __init__(self, log):
         self.log = log
         self.footprint = footprint(self.log)
@@ -17,6 +17,49 @@ class Alpha:
         self.event_incomes = []
         self.event_outcomes = []
         self.flows = []
+        self.frequency = []
+        self.significance = []
+        self.calculate_significance()
+        self.significance_threshhold = 0.99
+
+
+    def count_frequency(self):
+        for i in self.footprint.unique_events:
+            self.frequency.append([i, dict.fromkeys([w for w in self.footprint.unique_events], 0)])
+            for trace in self.log:
+                for i, event in enumerate(trace):
+                    if i+1 != len(trace):
+                        self.increment_freq(event, trace[i+1])
+
+    def increment_freq(self, event, value):
+        for freq_dict in self.frequency:
+            if freq_dict[0] == event:
+                freq_dict[1][value] += 1
+
+    def return_freq(self, event, value):
+        for freq_dict in self.frequency:
+            if freq_dict[0] == event:
+                return freq_dict[1][value]
+
+    def return_sign(self, event, value):
+        for freq_dict in self.significance:
+            if freq_dict[0] == event:
+                return freq_dict[1][value]
+
+    def calculate_significance(self):
+        self.count_frequency()
+        for i in self.footprint.unique_events:
+            self.significance.append([i, dict.fromkeys([w for w in self.footprint.unique_events], 0)])
+        for freq_dict in self.frequency:
+            event = freq_dict[0]
+            for value in freq_dict[1]:
+                a = self.return_freq(event, value)
+                b = self.return_freq(value, event)
+                for sign_dict in self.significance:
+                    if sign_dict[0] == event:
+                        sign_dict[1][value] = (a - b) / (a + b  + 1)
+
+        print(self.significance)
 
 
 
@@ -177,7 +220,7 @@ class Alpha:
 
             if event in self.succession:
                 for value in self.succession[event]:
-                    if not self.is_connected(event, value):
+                    if not self.is_connected(event, value) and self.return_sign(event, value) > self.significance_threshhold:
                          if event in self.node_successors and value in self.node_ancestors and not self.is_in_parallel(event, used_parallels):
                              self.add_flow_sucessor_to_ancestor(event, value)
                          elif event in self.node_successors and value not in self.node_ancestors:
@@ -257,8 +300,3 @@ class Alpha:
 
 
 
-
-
-
-alpha = Alpha(log_list)
-alpha.build_bpmn()
