@@ -32,6 +32,14 @@
 			<string key="Costs" value="50"/>
 		</event>
 		<event>
+			<string key="concept:name" value="register request"/>
+			<string key="org:resource" value="Pete"/>
+			<date key="time:timestamp" value="2010-12-30T14:32:00.000+01:00"/>
+			<string key="Activity" value="register request"/>
+			<string key="Resource" value="Pete"/>
+			<string key="Costs" value="50"/>
+		</event>
+		<event>
 			<string key="concept:name" value="examine casually"/>
 			<string key="org:resource" value="Mike"/>
 			<date key="time:timestamp" value="2010-12-30T15:06:00.000+01:00"/>
@@ -193,6 +201,14 @@
 			<date key="time:timestamp" value="2011-01-06T15:02:00.000+01:00"/>
 			<string key="Activity" value="register request"/>
 			<string key="Resource" value="Mike"/>
+			<string key="Costs" value="50"/>
+		</event>
+		<event>
+			<string key="concept:name" value="register request"/>
+			<string key="org:resource" value="Pete"/>
+			<date key="time:timestamp" value="2010-12-30T14:32:00.000+01:00"/>
+			<string key="Activity" value="register request"/>
+			<string key="Resource" value="Pete"/>
 			<string key="Costs" value="50"/>
 		</event>
 		<event>

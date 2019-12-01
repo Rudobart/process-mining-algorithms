@@ -34,7 +34,7 @@ class Footprint:
         pararrels = []
         for event in self.unique_events:
             for event2 in self.unique_events:
-                if (event, event2) in self.direct_sucession and (event2, event) in self.direct_sucession and [event, event2] not in pararrels and [event2, event] not in pararrels:
+                if (event, event2) in self.direct_sucession and (event2, event) in self.direct_sucession and [event, event2] not in pararrels and [event2, event] not in pararrels and event != event2:
                     pararrels.append([event, event2])
         return pararrels
 
@@ -77,6 +77,18 @@ class Footprint:
                 if (event, event2) not in self.direct_sucession and (event2, event) not in self.direct_sucession and (event,event2) not in independences:
                     independences.append((event,event2))
         return independences
+
+    def find_one_loops(self):
+        one_loops = []
+        for trace in self.log:
+            for index, event in enumerate(trace):
+                if index+1 != len(trace):
+                    if event == trace[index+1]:
+                        one_loops.append(event)
+        return one_loops
+
+
+
 
     def merge_sucessions(self):
         merged = {}
@@ -140,7 +152,10 @@ class Footprint:
     def count_node_outcomes(self, succession, parallels):
         outcomes = {}
         for key in succession:
-            outcomes[key] = len(succession[key])
+            if key in succession[key]:
+                outcomes[key] = len(succession[key]) - 1
+            else:
+                outcomes[key] = len(succession[key])
             for parallel in parallels:
                 for value in succession[key]:
                     if value in parallel:

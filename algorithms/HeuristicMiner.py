@@ -20,7 +20,8 @@ class HeuristicMiner:
         self.frequency = []
         self.significance = []
         self.calculate_significance()
-        self.significance_threshhold = 0.99
+        self.significance_threshhold = 0.50
+        self.one_loop_threshhold = 0.50
 
 
     def count_frequency(self):
@@ -57,9 +58,12 @@ class HeuristicMiner:
                 b = self.return_freq(value, event)
                 for sign_dict in self.significance:
                     if sign_dict[0] == event:
-                        sign_dict[1][value] = (a - b) / (a + b  + 1)
+                        if(event == value):
+                            sign_dict[1][value] = (a) / (a + 1)
+                        else:
+                             sign_dict[1][value] = (a - b) / (a + b + 1)
 
-        print(self.significance)
+
 
 
 
@@ -81,6 +85,8 @@ class HeuristicMiner:
         print("outcomes: ",self.event_outcomes)
         print("flows: ",self.flows)
         print("log: ",self.log)
+        print("frequency", self.frequency)
+        print("significance: ", self.significance)
 
 
 
@@ -220,6 +226,8 @@ class HeuristicMiner:
 
             if event in self.succession:
                 for value in self.succession[event]:
+                    if event == value and self.return_sign(event, event) < self.one_loop_threshhold:
+                        continue
                     if not self.is_connected(event, value) and self.return_sign(event, value) > self.significance_threshhold:
                          if event in self.node_successors and value in self.node_ancestors and not self.is_in_parallel(event, used_parallels):
                              self.add_flow_sucessor_to_ancestor(event, value)
@@ -279,6 +287,8 @@ class HeuristicMiner:
     def is_connected(self, source, target):
         availables= []
         availables.append(source)
+        if source == target:
+            return False
         for ava in availables:
             for tuple in self.flows:
                 if tuple[0] == ava and tuple[1] not in availables:

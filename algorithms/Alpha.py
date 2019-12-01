@@ -31,13 +31,13 @@ class Alpha:
         self.add_gates()
         self.add_flows()
         self.add_end_events()
-        print("ancestors: ", self.node_ancestors)
-        print("successors: ", self.node_successors)
-        print("succession:", self.succession)
-        print("incomes: ", self.event_incomes)
-        print("outcomes: ",self.event_outcomes)
-        print("flows: ",self.flows)
-        print("log: ",self.log)
+        # print("ancestors: ", self.node_ancestors)
+        # print("successors: ", self.node_successors)
+        # print("succession:", self.succession)
+        # print("incomes: ", self.event_incomes)
+        # print("outcomes: ",self.event_outcomes)
+        # print("flows: ",self.flows)
+        # print("log: ",self.log)
 
 
 
