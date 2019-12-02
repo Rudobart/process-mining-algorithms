@@ -8,6 +8,6 @@ from algorithms.Alpha import Alpha
 from algorithms.HeuristicMiner import HeuristicMiner
 
 if __name__ == '__main__':
-    alpha = Alpha(log_list)
+   # alpha = Alpha(log_list)
     heuristic_miner = HeuristicMiner(log_list)
     heuristic_miner.build_bpmn()

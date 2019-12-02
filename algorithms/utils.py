@@ -31,15 +31,25 @@ class Footprint:
 
     def find_parallels(self):
         # ||
-        pararrels = []
+        parallels = []
+        two_loops = self.find_two_loops()
         for event in self.unique_events:
             for event2 in self.unique_events:
-                if (event, event2) in self.direct_sucession and (event2, event) in self.direct_sucession and [event, event2] not in pararrels and [event2, event] not in pararrels and event != event2:
-                    pararrels.append([event, event2])
-        return pararrels
+                if (event, event2) in self.direct_sucession and (event2, event) in self.direct_sucession and [event, event2] not in parallels and [event2, event] not in parallels and event != event2:
+                    parallels.append([event, event2])
+
+        for two_loop in two_loops:
+            for parallel in parallels:
+                for event in parallel:
+                    for event2 in parallel:
+                        if event in two_loop and event2 in two_loop:
+                            if [event, event2] in parallels:
+                                parallels.remove([event, event2])
+                            if [event2, event] in parallels:
+                                parallels.remove([event2, event])
+        return parallels
 
     def max_parallels(self):
-        #maximalized parallels
         parallels = self.find_parallels()
         for parallel in parallels:
             for parallel2 in parallels:
@@ -88,6 +98,15 @@ class Footprint:
         return one_loops
 
 
+    def find_two_loops(self):
+        two_loops = []
+        for trace in self.log:
+            for index, event in enumerate(trace):
+                if index+2 < len(trace):
+                    if event == trace[index+2]:
+                        two_loops.append([event, trace[index+1]])
+
+        return two_loops
 
 
     def merge_sucessions(self):

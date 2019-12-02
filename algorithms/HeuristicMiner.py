@@ -10,7 +10,7 @@ class HeuristicMiner:
         self.footprint = footprint(self.log)
         self.succession = self.footprint.succession
         self.bpmn_graph = diagram.BpmnDiagramGraph()
-        self.bpmn_graph.create_new_diagram_graph(diagram_name="alpha_alogrithm_bpmn")
+        self.bpmn_graph.create_new_diagram_graph(diagram_name="heuristic_miner_bpmn")
         self.process_id = self.bpmn_graph.add_process_to_diagram()
         self.node_ancestors = {}
         self.node_successors = {}
@@ -19,9 +19,12 @@ class HeuristicMiner:
         self.flows = []
         self.frequency = []
         self.significance = []
+        self.long_relations_frequency = []
+        self.long_relations_significance = []
         self.calculate_significance()
-        self.significance_threshhold = 0.50
-        self.one_loop_threshhold = 0.50
+        self.calculate_long_significance()
+        self.significance_threshhold = 0.0
+        self.one_loop_threshhold = 0.0
 
 
     def count_frequency(self):
@@ -30,22 +33,27 @@ class HeuristicMiner:
             for trace in self.log:
                 for i, event in enumerate(trace):
                     if i+1 != len(trace):
-                        self.increment_freq(event, trace[i+1])
+                        self.increment_freq(event, trace[i+1], self.frequency)
 
-    def increment_freq(self, event, value):
-        for freq_dict in self.frequency:
+    def increment_freq(self, event, value, dicts):
+        for freq_dict in dicts:
             if freq_dict[0] == event:
                 freq_dict[1][value] += 1
 
-    def return_freq(self, event, value):
-        for freq_dict in self.frequency:
+
+
+    def return_dict_value(self, event, value, dicts):
+        for freq_dict in dicts:
             if freq_dict[0] == event:
                 return freq_dict[1][value]
 
-    def return_sign(self, event, value):
-        for freq_dict in self.significance:
-            if freq_dict[0] == event:
-                return freq_dict[1][value]
+    def sum_freq(self, event):
+        sum = 0
+        for trace in self.log:
+            for event2 in trace:
+                if event == event2:
+                    sum += 1
+        return sum
 
     def calculate_significance(self):
         self.count_frequency()
@@ -54,8 +62,8 @@ class HeuristicMiner:
         for freq_dict in self.frequency:
             event = freq_dict[0]
             for value in freq_dict[1]:
-                a = self.return_freq(event, value)
-                b = self.return_freq(value, event)
+                a = self.return_dict_value(event, value, self.frequency)
+                b = self.return_dict_value(value, event, self.frequency)
                 for sign_dict in self.significance:
                     if sign_dict[0] == event:
                         if(event == value):
@@ -63,8 +71,30 @@ class HeuristicMiner:
                         else:
                              sign_dict[1][value] = (a - b) / (a + b + 1)
 
+    def count_long_frequency(self):
+        for i in self.footprint.unique_events:
+            self.long_relations_frequency.append([i, dict.fromkeys([w for w in self.footprint.unique_events], 0)])
+        for trace in self.log:
+            for i in range(len(trace)):
+                for j in range(i+1, len(trace) - 1):
+                    print(trace[i], trace[j])
+                    self.increment_freq(trace[i], trace[j], self.long_relations_frequency)
+        print(self.long_relations_frequency)
 
 
+    def calculate_long_significance(self):
+        self.count_long_frequency()
+        for i in self.footprint.unique_events:
+            self.long_relations_significance.append([i, dict.fromkeys([w for w in self.footprint.unique_events], 0)])
+        for freq_dict in self.long_relations_frequency:
+            event = freq_dict[0]
+            for value in freq_dict[1]:
+                a = self.return_dict_value(event, value, self.long_relations_frequency)
+                b = self.sum_freq(event)
+                for sign_dict in self.long_relations_significance:
+                    if sign_dict[0] == event:
+                        sign_dict[1][value] = a / (b + 1)
+        print(self.long_relations_significance)
 
 
 
@@ -95,7 +125,7 @@ class HeuristicMiner:
     #    layouter.generate_layout(self.bpmn_graph)
         # Uncomment line below to get a simple view of created diagram
         #visualizer.visualize_diagram(self.bpmn_graph)
-        self.bpmn_graph.export_xml_file(output_directory, "alpha_algorithm.bpmn")
+        self.bpmn_graph.export_xml_file(output_directory, "heuristic_miner.bpmn")
 
 
 
@@ -166,7 +196,7 @@ class HeuristicMiner:
                     if value in parallel:
                         for event in parallel:
                             for event2 in parallel:
-                                if len(self.node_successors[event]) < len(self.node_successors[event2]):
+                                if len(self.node_successors[event]) < len(self.node_successors[event2]) and event in self.succession[key]:
                                     self.succession[key].remove(event)
 
 
@@ -226,9 +256,9 @@ class HeuristicMiner:
 
             if event in self.succession:
                 for value in self.succession[event]:
-                    if event == value and self.return_sign(event, event) < self.one_loop_threshhold:
+                    if event == value and self.return_dict_value(event, event, self.significance) < self.one_loop_threshhold:
                         continue
-                    if not self.is_connected(event, value) and self.return_sign(event, value) > self.significance_threshhold:
+                    if not self.is_connected(event, value) and self.return_dict_value(event, value, self.significance) > self.significance_threshhold or [event,value] in self.footprint.find_two_loops() or [value,event] in self.footprint.find_two_loops():
                          if event in self.node_successors and value in self.node_ancestors and not self.is_in_parallel(event, used_parallels):
                              self.add_flow_sucessor_to_ancestor(event, value)
                          elif event in self.node_successors and value not in self.node_ancestors:

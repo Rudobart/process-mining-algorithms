@@ -117,7 +117,7 @@ class Alpha:
                     if value in parallel:
                         for event in parallel:
                             for event2 in parallel:
-                                if len(self.node_successors[event]) < len(self.node_successors[event2]):
+                                if len(self.node_successors[event]) < len(self.node_successors[event2]) and event in self.succession[key]:
                                     self.succession[key].remove(event)
 
 
