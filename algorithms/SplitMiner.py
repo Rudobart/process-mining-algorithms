@@ -2,24 +2,62 @@ from config import *
 import bpmn_python.bpmn_diagram_layouter as layouter
 import bpmn_python.bpmn_diagram_visualizer as visualizer
 import bpmn_python.bpmn_diagram_rep as diagram
-from algorithms.utils import Footprint as footprint
+from algorithms.algorithms_utils import Footprint as footprint
 
-class Alpha:
+class SplitMiner:
     def __init__(self, log):
+        self.algorithm_name = "split"
         self.log = log
-        self.footprint = footprint(self.log)
+        self.footprint = footprint(self.log, self.algorithm_name)
         self.succession = self.footprint.succession
         self.bpmn_graph = diagram.BpmnDiagramGraph()
-        self.bpmn_graph.create_new_diagram_graph(diagram_name="alpha_alogrithm_bpmn")
+        self.bpmn_graph.create_new_diagram_graph(diagram_name="split_miner_bpmn")
         self.process_id = self.bpmn_graph.add_process_to_diagram()
         self.node_ancestors = {}
         self.node_successors = {}
         self.event_incomes = []
         self.event_outcomes = []
         self.flows = []
+        self.frequency = []
+        self.significance = []
+        self.calculate_significance()
+        self.significance_threshhold = 0.50
+        self.one_loop_threshhold = 0.0
 
 
+    def count_frequency(self):
+        for i in self.footprint.unique_events:
+            self.frequency.append([i, dict.fromkeys([w for w in self.footprint.unique_events], 0)])
+            for trace in self.log:
+                for i, event in enumerate(trace):
+                    if i+1 != len(trace):
+                        self.increment_freq(event, trace[i+1], self.frequency)
 
+    def increment_freq(self, event, value, dicts):
+        for freq_dict in dicts:
+            if freq_dict[0] == event:
+                freq_dict[1][value] += 1
+
+    def return_dict_value(self, event, value, dicts):
+        for freq_dict in dicts:
+            if freq_dict[0] == event:
+                return freq_dict[1][value]
+
+    def calculate_significance(self):
+        self.count_frequency()
+        for i in self.footprint.unique_events:
+            self.significance.append([i, dict.fromkeys([w for w in self.footprint.unique_events], 0)])
+        for freq_dict in self.frequency:
+            event = freq_dict[0]
+            for value in freq_dict[1]:
+                a = self.return_dict_value(event, value, self.frequency)
+                b = self.return_dict_value(value, event, self.frequency)
+                for sign_dict in self.significance:
+                    if sign_dict[0] == event:
+                        if(event == value):
+                            sign_dict[1][value] = (a) / (a + 1)
+                        else:
+                             sign_dict[1][value] = (a - b) / (a + b + 1)
 
     def build_bpmn(self):
         self.add_nodes()
@@ -41,12 +79,11 @@ class Alpha:
 
 
 
-
+        #uncomennt if diagram is simple
 
     #    layouter.generate_layout(self.bpmn_graph)
-        # Uncomment line below to get a simple view of created diagram
-        #visualizer.visualize_diagram(self.bpmn_graph)
-        self.bpmn_graph.export_xml_file(output_directory, "alpha_algorithm.bpmn")
+
+        self.bpmn_graph.export_xml_file(output_directory, "split_miner.bpmn")
 
 
 
@@ -259,6 +296,3 @@ class Alpha:
 
 
 
-
-alpha = Alpha(log_list)
-alpha.build_bpmn()

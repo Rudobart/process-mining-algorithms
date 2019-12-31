@@ -1,5 +1,6 @@
 class Footprint:
-    def __init__(self, log):
+    def __init__(self, log, algorithm_name):
+        self.algorithm_name = algorithm_name
         self.log = log
         self.unique_events = self.find_unique_events()
         self.direct_sucession = self.find_direct_sucession()
@@ -8,7 +9,7 @@ class Footprint:
         self.succession = self.merge_sucessions()
         self.parallels = self.find_parallels()
         self.node_incomes = self.count_node_incomes(self.succession, self.parallels)
-        self.node_outcomes = self.count_node_outcomes(self.succession,self.parallels)
+        self.node_outcomes = self.count_node_outcomes(self.succession, self.parallels)
 
     def find_unique_events(self):
         unique = []
@@ -37,6 +38,9 @@ class Footprint:
             for event2 in self.unique_events:
                 if (event, event2) in self.direct_sucession and (event2, event) in self.direct_sucession and [event, event2] not in parallels and [event2, event] not in parallels and event != event2:
                     parallels.append([event, event2])
+
+        if self.algorithm_name == "alpha":
+            return parallels
 
         for two_loop in two_loops:
             for parallel in parallels:
