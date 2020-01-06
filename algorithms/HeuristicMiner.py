@@ -24,7 +24,7 @@ class HeuristicMiner:
         self.long_relations_significance = []
         self.calculate_significance()
         self.calculate_long_significance()
-        self.significance_threshhold = 0.99
+        self.significance_threshhold = 0.0
         self.one_loop_threshhold = 0.0
 
 

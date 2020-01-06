@@ -21,7 +21,7 @@ class SplitMiner:
         self.frequency = []
         self.significance = []
         self.calculate_significance()
-        self.significance_threshhold = 0.50
+        self.significance_threshhold = 0.0
         self.one_loop_threshhold = 0.0
 
 
